@@ -4,9 +4,8 @@ namespace Jellyfin.Plugin.MetaTube.Helpers;
 
 public class SubstitutionTable : Dictionary<string, string>
 {
-    private SubstitutionTable() : base(StringComparer.OrdinalIgnoreCase)
-    {
-    }
+    private SubstitutionTable()
+        : base(StringComparer.OrdinalIgnoreCase) { }
 
     public static SubstitutionTable Parse(string text)
     {
@@ -22,7 +21,7 @@ public class SubstitutionTable : Dictionary<string, string>
             {
                 1 => null,
                 2 => kvp[1],
-                _ => dictionary[kvp[0]]
+                _ => dictionary[kvp[0]],
             };
         }
 
@@ -34,9 +33,12 @@ public class SubstitutionTable : Dictionary<string, string>
         var table = this;
         return table.Any() != true
             ? string.Empty
-            : string.Join('\n',
-                table.Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key))
-                    .Select(kvp => $"{kvp.Key?.Trim()}={kvp.Value?.Trim()}"));
+            : string.Join(
+                '\n',
+                table
+                    .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key))
+                    .Select(kvp => $"{kvp.Key?.Trim()}={kvp.Value?.Trim()}")
+            );
     }
 
     public string Substitute(string source)
@@ -45,7 +47,9 @@ public class SubstitutionTable : Dictionary<string, string>
 
         return table.Any() != true
             ? source
-            : table.Aggregate(new StringBuilder(source), (sb, kvp) => sb.Replace(kvp.Key, kvp.Value)).ToString();
+            : table
+                .Aggregate(new StringBuilder(source), (sb, kvp) => sb.Replace(kvp.Key, kvp.Value))
+                .ToString();
     }
 
     public IEnumerable<string> Substitute(IEnumerable<string> source)

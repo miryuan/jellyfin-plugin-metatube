@@ -28,7 +28,10 @@ public class OrganizeMetadataTask : IScheduledTask
         _libraryManager = libraryManager;
     }
 #else
-    public OrganizeMetadataTask(ILogger<OrganizeMetadataTask> logger, ILibraryManager libraryManager)
+    public OrganizeMetadataTask(
+        ILogger<OrganizeMetadataTask> logger,
+        ILibraryManager libraryManager
+    )
     {
         _logger = logger;
         _libraryManager = libraryManager;
@@ -39,7 +42,8 @@ public class OrganizeMetadataTask : IScheduledTask
 
     public string Name => "Organize Metadata";
 
-    public string Description => $"Organizes video metadata provided by {Plugin.ProviderName} in library.";
+    public string Description =>
+        $"Organizes video metadata provided by {Plugin.ProviderName} in library.";
 
     public string Category => Plugin.ProviderName;
 
@@ -52,7 +56,7 @@ public class OrganizeMetadataTask : IScheduledTask
 #else
             Type = TaskTriggerInfoType.DailyTrigger,
 #endif
-            TimeOfDayTicks = TimeSpan.FromHours(3).Ticks
+            TimeOfDayTicks = TimeSpan.FromHours(3).Ticks,
         };
     }
 
@@ -66,17 +70,24 @@ public class OrganizeMetadataTask : IScheduledTask
 
         progress?.Report(0);
 
-        var items = _libraryManager.GetItemList(new InternalItemsQuery
-        {
-            MediaTypes = new[] { MediaType.Video },
+        var items = _libraryManager
+            .GetItemList(
+                new InternalItemsQuery
+                {
+                    MediaTypes = new[] { MediaType.Video },
 #if __EMBY__
-            HasAnyProviderId = new[] { Plugin.ProviderId },
-            IncludeItemTypes = new[] { nameof(Movie) },
+                    HasAnyProviderId = new[] { Plugin.ProviderId },
+                    IncludeItemTypes = new[] { nameof(Movie) },
 #else
-            HasAnyProviderId = new Dictionary<string, string> { { Plugin.ProviderId, string.Empty } },
-            IncludeItemTypes = new[] { BaseItemKind.Movie }
+                    HasAnyProviderId = new Dictionary<string, string>
+                    {
+                        { Plugin.ProviderId, string.Empty },
+                    },
+                    IncludeItemTypes = new[] { BaseItemKind.Movie }
 #endif
-        }).ToList();
+                }
+            )
+            .ToList();
 
         foreach (var (idx, item) in items.WithIndex())
         {
@@ -87,15 +98,21 @@ public class OrganizeMetadataTask : IScheduledTask
 
             try
             {
-                switch (HasEmbeddedChineseSubtitle(item.FileNameWithoutExtension) ||
-                        HasExternalChineseSubtitle(item.Path))
+                switch (
+                    HasEmbeddedChineseSubtitle(item.FileNameWithoutExtension)
+                    || HasExternalChineseSubtitle(item.Path)
+                )
                 {
                     // Add `ChineseSubtitle` genre.
                     case true when !genres.Contains(ChineseSubtitle):
                     {
                         genres.Add(ChineseSubtitle);
                         if (Plugin.Instance.Configuration.EnableBadges)
-                            await SetPrimaryImage(item, Plugin.Instance.Configuration.BadgeUrl, cancellationToken);
+                            await SetPrimaryImage(
+                                item,
+                                Plugin.Instance.Configuration.BadgeUrl,
+                                cancellationToken
+                            );
                         break;
                     }
                     // Remove `ChineseSubtitle` genre.
@@ -114,15 +131,20 @@ public class OrganizeMetadataTask : IScheduledTask
             }
 
             // Remove duplicates.
-            var orderedGenres =
-                (Plugin.Instance.Configuration.EnableGenreSubstitution
+            var orderedGenres = (
+                Plugin.Instance.Configuration.EnableGenreSubstitution
                     // Substitute genres.
                     ? Plugin.Instance.Configuration.GetGenreSubstitutionTable().Substitute(genres)
-                    : genres).Distinct().OrderByString(genre => genre).ToList();
+                    : genres
+            ).Distinct().OrderByString(genre => genre).ToList();
 
             // Skip updating item if equal.
-            if (!orderedGenres.Any() ||
-                (item.Genres?.SequenceEqual(orderedGenres, StringComparer.OrdinalIgnoreCase)).GetValueOrDefault(false))
+            if (
+                !orderedGenres.Any()
+                || (
+                    item.Genres?.SequenceEqual(orderedGenres, StringComparer.OrdinalIgnoreCase)
+                ).GetValueOrDefault(false)
+            )
                 continue;
 
             item.Genres = orderedGenres.ToArray();
@@ -166,20 +188,29 @@ public class OrganizeMetadataTask : IScheduledTask
 
     private static bool HasExternalChineseSubtitle(string path)
     {
-        return HasExternalChineseSubtitle(Path.GetFileNameWithoutExtension(path),
-            Directory.GetParent(path)?.GetFiles().Select(info => info.Name));
+        return HasExternalChineseSubtitle(
+            Path.GetFileNameWithoutExtension(path),
+            Directory.GetParent(path)?.GetFiles().Select(info => info.Name)
+        );
     }
 
     private static bool HasExternalChineseSubtitle(string basename, IEnumerable<string> files)
     {
-        var r = new Regex(@"\.(ch[ist]|zho?(-(cn|hk|sg|tw))?)\.(ass|srt|ssa|smi|sub|idx|psb|vtt)$",
-            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
-        return files.Any(name => r.IsMatch(name) &&
-                                 r.Replace(name, string.Empty)
-                                     .Equals(basename, StringComparison.OrdinalIgnoreCase));
+        var r = new Regex(
+            @"\.(ch[ist]|zho?(-(cn|hk|sg|tw))?)\.(ass|srt|ssa|smi|sub|idx|psb|vtt)$",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled
+        );
+        return files.Any(name =>
+            r.IsMatch(name)
+            && r.Replace(name, string.Empty).Equals(basename, StringComparison.OrdinalIgnoreCase)
+        );
     }
 
-    private static async Task SetPrimaryImage(BaseItem item, string badge, CancellationToken cancellationToken)
+    private static async Task SetPrimaryImage(
+        BaseItem item,
+        string badge,
+        CancellationToken cancellationToken
+    )
     {
         var pid = item.GetPid(Plugin.ProviderId);
         if (string.IsNullOrWhiteSpace(pid.Id) || string.IsNullOrWhiteSpace(pid.Provider))
@@ -187,11 +218,14 @@ public class OrganizeMetadataTask : IScheduledTask
 
         var m = await ApiClient.GetMovieInfoAsync(pid.Provider, pid.Id, cancellationToken);
         // Set first primary image.
-        item.SetImage(new ItemImageInfo
-        {
-            Path = ApiClient.GetPrimaryImageApiUrl(m.Provider, m.Id, pid.Position ?? -1, badge),
-            Type = ImageType.Primary
-        }, 0);
+        item.SetImage(
+            new ItemImageInfo
+            {
+                Path = ApiClient.GetPrimaryImageApiUrl(m.Provider, m.Id, pid.Position ?? -1, badge),
+                Type = ImageType.Primary,
+            },
+            0
+        );
     }
 
     #endregion

@@ -23,6 +23,16 @@ public class GenerateTrailersTask : IScheduledTask
 
     // Uniform suffix for all trailer files.
     private const string TrailerFileSuffix = "-Trailer.strm";
+
+    /// <summary>
+    /// 文件系统搜索模式，用于查找所有MetaTube生成的预告片文件。
+    /// </summary>
+    /// <remarks>
+    /// 该搜索模式基于通配符*和TrailerFileSuffix常量构建，用于在文件系统中定位所有以"-Trailer.strm"结尾的文件。
+    /// 主要用于删除旧的或过时的预告片文件，确保只保留最新的预告片。
+    /// </remarks>
+    /// <value>搜索模式字符串，值为"*-Trailer.strm"</value>
+    /// <seealso cref="DeleteFiles(string, string, string[])"/>
     private const string TrailerSearchPattern = $"*{TrailerFileSuffix}";
 
     // UTF-8 without BOM encoding.
@@ -38,7 +48,10 @@ public class GenerateTrailersTask : IScheduledTask
         _libraryManager = libraryManager;
     }
 #else
-    public GenerateTrailersTask(ILogger<GenerateTrailersTask> logger, ILibraryManager libraryManager)
+    public GenerateTrailersTask(
+        ILogger<GenerateTrailersTask> logger,
+        ILibraryManager libraryManager
+    )
     {
         _logger = logger;
         _libraryManager = libraryManager;
@@ -49,7 +62,8 @@ public class GenerateTrailersTask : IScheduledTask
 
     public string Name => "Generate Trailers";
 
-    public string Description => $"Generates video trailers provided by {Plugin.ProviderName} in library.";
+    public string Description =>
+        $"Generates video trailers provided by {Plugin.ProviderName} in library.";
 
     public string Category => Plugin.ProviderName;
 
@@ -62,7 +76,7 @@ public class GenerateTrailersTask : IScheduledTask
 #else
             Type = TaskTriggerInfoType.DailyTrigger,
 #endif
-            TimeOfDayTicks = TimeSpan.FromHours(1).Ticks
+            TimeOfDayTicks = TimeSpan.FromHours(1).Ticks,
         };
     }
 
@@ -80,17 +94,24 @@ public class GenerateTrailersTask : IScheduledTask
 
         progress?.Report(0);
 
-        var items = _libraryManager.GetItemList(new InternalItemsQuery
-        {
-            MediaTypes = new[] { MediaType.Video },
+        var items = _libraryManager
+            .GetItemList(
+                new InternalItemsQuery
+                {
+                    MediaTypes = new[] { MediaType.Video },
 #if __EMBY__
-            HasAnyProviderId = new[] { Plugin.ProviderId },
-            IncludeItemTypes = new[] { nameof(Movie) },
+                    HasAnyProviderId = new[] { Plugin.ProviderId },
+                    IncludeItemTypes = new[] { nameof(Movie) },
 #else
-            HasAnyProviderId = new Dictionary<string, string> { { Plugin.ProviderId, string.Empty } },
-            IncludeItemTypes = new[] { BaseItemKind.Movie }
+                    HasAnyProviderId = new Dictionary<string, string>
+                    {
+                        { Plugin.ProviderId, string.Empty },
+                    },
+                    IncludeItemTypes = new[] { BaseItemKind.Movie }
 #endif
-        }).ToList();
+                }
+            )
+            .ToList();
 
         foreach (var (idx, item) in items.WithIndex())
         {
@@ -122,8 +143,10 @@ public class GenerateTrailersTask : IScheduledTask
                     continue;
                 }
 
-                var trailerFilePath = Path.Join(trailersFolderPath,
-                    $"{item.Name.Split().First()}{TrailerFileSuffix}");
+                var trailerFilePath = Path.Join(
+                    trailersFolderPath,
+                    $"{item.Name.Split().First()}{TrailerFileSuffix}"
+                );
 
 #if __EMBY__
                 var lastSavedUtcDateTime = item.DateLastSaved.UtcDateTime;
@@ -135,11 +158,19 @@ public class GenerateTrailersTask : IScheduledTask
                 if (File.Exists(trailerFilePath))
                 {
                     // Skip if trailer file is up to date.
-                    if (File.GetLastWriteTimeUtc(trailerFilePath).CompareTo(lastSavedUtcDateTime) >= 0)
+                    if (
+                        File.GetLastWriteTimeUtc(trailerFilePath).CompareTo(lastSavedUtcDateTime)
+                        >= 0
+                    )
                         continue;
 
                     // Skip if content is not modified.
-                    if (string.Equals(await File.ReadAllTextAsync(trailerFilePath, cancellationToken), trailerUrl))
+                    if (
+                        string.Equals(
+                            await File.ReadAllTextAsync(trailerFilePath, cancellationToken),
+                            trailerUrl
+                        )
+                    )
                     {
                         File.SetLastWriteTimeUtc(trailerFilePath, DateTime.UtcNow);
                         continue;
@@ -156,7 +187,12 @@ public class GenerateTrailersTask : IScheduledTask
                 _logger.Info("Generate trailer for video {0} at {1}", item.Name, trailerFilePath);
 
                 // Write .strm trailer file.
-                await File.WriteAllTextAsync(trailerFilePath, trailerUrl, Utf8WithoutBom, cancellationToken);
+                await File.WriteAllTextAsync(
+                    trailerFilePath,
+                    trailerUrl,
+                    Utf8WithoutBom,
+                    cancellationToken
+                );
             }
             catch (Exception e)
             {
@@ -167,14 +203,21 @@ public class GenerateTrailersTask : IScheduledTask
         progress?.Report(100);
     }
 
-    private static void DeleteFiles(string path, string searchPattern, params string[] excludedFiles)
+    private static void DeleteFiles(
+        string path,
+        string searchPattern,
+        params string[] excludedFiles
+    )
     {
-        DeleteFiles(Directory.GetFiles(path, searchPattern).Where(file => !excludedFiles.Contains(file)));
+        DeleteFiles(
+            Directory.GetFiles(path, searchPattern).Where(file => !excludedFiles.Contains(file))
+        );
     }
 
     private static void DeleteFiles(IEnumerable<string> files)
     {
-        foreach (var file in files) File.Delete(file);
+        foreach (var file in files)
+            File.Delete(file);
     }
 
     private static void DeleteDirectoryIfEmpty(string path)

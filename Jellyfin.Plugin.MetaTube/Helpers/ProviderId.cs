@@ -18,19 +18,18 @@ public class ProviderId
             Provider = values?.Length > 0 ? values[0] : string.Empty,
             Id = values?.Length > 1 ? Uri.UnescapeDataString(values[1]) : string.Empty,
             Position = values?.Length > 2 ? ToDouble(values[2]) : null,
-            Update = values?.Length > 3 ? ToBool(values[3]) : null
+            Update = values?.Length > 3 ? ToBool(values[3]) : null,
         };
     }
 
     public override string ToString()
     {
         var pid = this;
-        var values = new List<string>
-        {
-            pid.Provider, pid.Id
-        };
-        if (pid.Position.HasValue) values.Add(pid.Position.ToString());
-        if (pid.Update.HasValue) values.Add((values.Count == 2 ? ":" : string.Empty) + pid.Update);
+        var values = new List<string> { pid.Provider, pid.Id };
+        if (pid.Position.HasValue)
+            values.Add(pid.Position.ToString());
+        if (pid.Update.HasValue)
+            values.Add((values.Count == 2 ? ":" : string.Empty) + pid.Update);
         return string.Join(':', values);
     }
 

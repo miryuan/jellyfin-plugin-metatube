@@ -16,18 +16,25 @@ namespace Jellyfin.Plugin.MetaTube.Providers;
 public class ActorImageProvider : BaseProvider, IRemoteImageProvider, IHasOrder
 {
 #if __EMBY__
-    public ActorImageProvider(ILogManager logManager) : base(logManager.CreateLogger<ActorImageProvider>())
+    public ActorImageProvider(ILogManager logManager)
+        : base(logManager.CreateLogger<ActorImageProvider>())
 #else
-    public ActorImageProvider( ILogger<ActorImageProvider> logger) : base(logger)
+    public ActorImageProvider(ILogger<ActorImageProvider> logger)
+        : base(logger)
 #endif
-    {
-    }
+    { }
 
 #if __EMBY__
-    public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, LibraryOptions libraryOptions,
-        CancellationToken cancellationToken)
+    public async Task<IEnumerable<RemoteImageInfo>> GetImages(
+        BaseItem item,
+        LibraryOptions libraryOptions,
+        CancellationToken cancellationToken
+    )
 #else
-    public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
+    public async Task<IEnumerable<RemoteImageInfo>> GetImages(
+        BaseItem item,
+        CancellationToken cancellationToken
+    )
 #endif
     {
         var pid = item.GetPid(Plugin.ProviderId);
@@ -43,7 +50,13 @@ public class ActorImageProvider : BaseProvider, IRemoteImageProvider, IHasOrder
         {
             ProviderName = Name,
             Type = ImageType.Primary,
-            Url = ApiClient.GetPrimaryImageApiUrl(actorInfo.Provider, actorInfo.Id, image, 0.5, true)
+            Url = ApiClient.GetPrimaryImageApiUrl(
+                actorInfo.Provider,
+                actorInfo.Id,
+                image,
+                0.5,
+                true
+            ),
         });
     }
 
@@ -54,9 +67,6 @@ public class ActorImageProvider : BaseProvider, IRemoteImageProvider, IHasOrder
 
     public IEnumerable<ImageType> GetSupportedImages(BaseItem item)
     {
-        return new List<ImageType>
-        {
-            ImageType.Primary
-        };
+        return new List<ImageType> { ImageType.Primary };
     }
 }

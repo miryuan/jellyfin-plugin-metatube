@@ -29,7 +29,9 @@ public class PluginConfiguration : BasePluginConfiguration
 
 #if __EMBY__
     [DisplayName("Token")]
-    [Description("Access token for the MetaTube Server, or blank if no token is set by the backend.")]
+    [Description(
+        "Access token for the MetaTube Server, or blank if no token is set by the backend."
+    )]
 #endif
     public string Token { get; set; } = string.Empty;
 
@@ -89,7 +91,9 @@ public class PluginConfiguration : BasePluginConfiguration
 
 #if __EMBY__
     [DisplayName("Default image quality")]
-    [Description("Default compression quality for JPEG images, set between 0 and 100. (default: 90)")]
+    [Description(
+        "Default compression quality for JPEG images, set between 0 and 100. (default: 90)"
+    )]
     [MinValue(0)]
     [MaxValue(100)]
     [Required]
@@ -105,13 +109,22 @@ public class PluginConfiguration : BasePluginConfiguration
 #if __EMBY__
     [DisplayName("Movie provider filter")]
     [Description(
-        "Provider names are case-insensitive, with decreasing precedence from left to right, separated by commas.")]
+        "Provider names are case-insensitive, with decreasing precedence from left to right, separated by commas."
+    )]
 #endif
     public string RawMovieProviderFilter
     {
-        get => _movieProviderFilter?.Any() == true ? string.Join(',', _movieProviderFilter) : string.Empty;
-        set => _movieProviderFilter = value?.Split(',').Select(s => s.Trim()).Where(s => s.Any())
-            .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        get =>
+            _movieProviderFilter?.Any() == true
+                ? string.Join(',', _movieProviderFilter)
+                : string.Empty;
+        set =>
+            _movieProviderFilter = value
+                ?.Split(',')
+                .Select(s => s.Trim())
+                .Where(s => s.Any())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
     }
 
     public List<string> GetMovieProviderFilter()
@@ -216,7 +229,8 @@ public class PluginConfiguration : BasePluginConfiguration
 #if __EMBY__
     [DisplayName("Title substitution table")]
     [Description(
-        "One record per line, separated by equal signs. Leave the target substring blank to delete the source substring.")]
+        "One record per line, separated by equal signs. Leave the target substring blank to delete the source substring."
+    )]
     [EditMultiline(5)]
 #endif
     public string TitleRawSubstitutionTable
@@ -240,7 +254,8 @@ public class PluginConfiguration : BasePluginConfiguration
 #if __EMBY__
     [DisplayName("Actor substitution table")]
     [Description(
-        "One record per line, separated by equal signs. Leave the target actor blank to delete the source actor.")]
+        "One record per line, separated by equal signs. Leave the target actor blank to delete the source actor."
+    )]
     [EditMultiline(5)]
 #endif
     public string ActorRawSubstitutionTable
@@ -264,7 +279,8 @@ public class PluginConfiguration : BasePluginConfiguration
 #if __EMBY__
     [DisplayName("Title substitution table")]
     [Description(
-        "One record per line, separated by equal signs. Leave the target genre blank to delete the source genre.")]
+        "One record per line, separated by equal signs. Leave the target genre blank to delete the source genre."
+    )]
     [EditMultiline(5)]
 #endif
     public string GenreRawSubstitutionTable

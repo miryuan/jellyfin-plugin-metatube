@@ -16,15 +16,16 @@ namespace Jellyfin.Plugin.MetaTube;
 #if __EMBY__
 public class Plugin : BasePluginSimpleUI<PluginConfiguration>, IHasThumbImage
 {
-    public Plugin(IApplicationHost applicationHost) : base(applicationHost)
+    public Plugin(IApplicationHost applicationHost)
+        : base(applicationHost)
     {
         Instance = this;
     }
 #else
 public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 {
-    public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths,
-        xmlSerializer)
+    public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer)
+        : base(applicationPaths, xmlSerializer)
     {
         Instance = this;
     }
@@ -50,8 +51,8 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             new PluginPageInfo
             {
                 Name = Name,
-                EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.html"
-            }
+                EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.html",
+            },
         };
     }
 #endif

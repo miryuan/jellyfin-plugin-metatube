@@ -11,7 +11,7 @@ public static class Levenshtein
 
         int[] costs = new int[value2.Length];
 
-        for (int i = 0; i < costs.Length;)
+        for (int i = 0; i < costs.Length; )
         {
             costs[i] = ++i;
         }

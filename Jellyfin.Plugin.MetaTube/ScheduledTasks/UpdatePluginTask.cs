@@ -21,8 +21,13 @@ public class UpdatePluginTask : IScheduledTask
     private readonly ILogger _logger;
     private readonly IZipClient _zipClient;
 
-    public UpdatePluginTask(IApplicationHost applicationHost, IApplicationPaths applicationPaths,
-        IHttpClient httpClient, ILogManager logManager, IZipClient zipClient)
+    public UpdatePluginTask(
+        IApplicationHost applicationHost,
+        IApplicationPaths applicationPaths,
+        IHttpClient httpClient,
+        ILogManager logManager,
+        IZipClient zipClient
+    )
     {
         _applicationHost = applicationHost;
         _applicationPaths = applicationPaths;
@@ -31,7 +36,8 @@ public class UpdatePluginTask : IScheduledTask
         _zipClient = zipClient;
     }
 
-    private static string CurrentVersion => Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+    private static string CurrentVersion =>
+        Assembly.GetExecutingAssembly().GetName().Version?.ToString();
 
     public string Key => $"{Plugin.ProviderName}UpdatePlugin";
 
@@ -46,7 +52,7 @@ public class UpdatePluginTask : IScheduledTask
         yield return new TaskTriggerInfo
         {
             Type = TaskTriggerInfo.TriggerDaily,
-            TimeOfDayTicks = TimeSpan.FromHours(5).Ticks
+            TimeOfDayTicks = TimeSpan.FromHours(5).Ticks,
         };
     }
 
@@ -64,13 +70,20 @@ public class UpdatePluginTask : IScheduledTask
 
         try
         {
-            var apiResult = JsonSerializer.Deserialize<ApiResponseInfo>(await _httpClient.Get(new HttpRequestOptions
-            {
-                Url = "https://api.github.com/repos/metatube-community/jellyfin-plugin-metatube/releases/latest",
-                CancellationToken = cancellationToken,
-                AcceptHeader = "application/json",
-                EnableDefaultUserAgent = true
-            }).ConfigureAwait(false));
+            var apiResult = JsonSerializer.Deserialize<ApiResponseInfo>(
+                await _httpClient
+                    .Get(
+                        new HttpRequestOptions
+                        {
+                            Url =
+                                "https://api.github.com/repos/metatube-community/jellyfin-plugin-metatube/releases/latest",
+                            CancellationToken = cancellationToken,
+                            AcceptHeader = "application/json",
+                            EnableDefaultUserAgent = true,
+                        }
+                    )
+                    .ConfigureAwait(false)
+            );
 
             var currentVersion = ParseVersion(CurrentVersion);
             var remoteVersion = ParseVersion(apiResult?.TagName);
@@ -79,20 +92,27 @@ public class UpdatePluginTask : IScheduledTask
             {
                 _logger.Info("Found new plugin version: {0}", remoteVersion);
 
-                var url = apiResult?.Assets
-                    .Where(asset => asset.Name.StartsWith("Emby") && asset.Name.EndsWith(".zip")).ToArray()
+                var url = apiResult
+                    ?.Assets.Where(asset =>
+                        asset.Name.StartsWith("Emby") && asset.Name.EndsWith(".zip")
+                    )
+                    .ToArray()
                     .FirstOrDefault()
                     ?.BrowserDownloadUrl;
                 if (!Uri.IsWellFormedUriString(url, UriKind.Absolute))
                     throw new Exception("Invalid download url");
 
-                var zipStream = await _httpClient.Get(new HttpRequestOptions
-                {
-                    Url = url,
-                    CancellationToken = cancellationToken,
-                    EnableDefaultUserAgent = true,
-                    Progress = progress
-                }).ConfigureAwait(false);
+                var zipStream = await _httpClient
+                    .Get(
+                        new HttpRequestOptions
+                        {
+                            Url = url,
+                            CancellationToken = cancellationToken,
+                            EnableDefaultUserAgent = true,
+                            Progress = progress,
+                        }
+                    )
+                    .ConfigureAwait(false);
 
                 _zipClient.ExtractAllFromZip(zipStream, _applicationPaths.PluginsPath, true);
 

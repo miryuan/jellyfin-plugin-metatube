@@ -17,18 +17,25 @@ namespace Jellyfin.Plugin.MetaTube.Providers;
 public class MovieImageProvider : BaseProvider, IRemoteImageProvider, IHasOrder
 {
 #if __EMBY__
-    public MovieImageProvider(ILogManager logManager) : base(logManager.CreateLogger<MovieImageProvider>())
+    public MovieImageProvider(ILogManager logManager)
+        : base(logManager.CreateLogger<MovieImageProvider>())
 #else
-    public MovieImageProvider(ILogger<MovieImageProvider> logger) : base(logger)
+    public MovieImageProvider(ILogger<MovieImageProvider> logger)
+        : base(logger)
 #endif
-    {
-    }
+    { }
 
 #if __EMBY__
-    public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, LibraryOptions libraryOptions,
-        CancellationToken cancellationToken)
+    public async Task<IEnumerable<RemoteImageInfo>> GetImages(
+        BaseItem item,
+        LibraryOptions libraryOptions,
+        CancellationToken cancellationToken
+    )
 #else
-    public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
+    public async Task<IEnumerable<RemoteImageInfo>> GetImages(
+        BaseItem item,
+        CancellationToken cancellationToken
+    )
 #endif
     {
         var pid = item.GetPid(Plugin.ProviderId);
@@ -42,44 +49,55 @@ public class MovieImageProvider : BaseProvider, IRemoteImageProvider, IHasOrder
             {
                 ProviderName = Name,
                 Type = ImageType.Primary,
-                Url = ApiClient.GetPrimaryImageApiUrl(m.Provider, m.Id, pid.Position ?? -1)
+                Url = ApiClient.GetPrimaryImageApiUrl(m.Provider, m.Id, pid.Position ?? -1),
             },
             new()
             {
                 ProviderName = Name,
                 Type = ImageType.Thumb,
-                Url = ApiClient.GetThumbImageApiUrl(m.Provider, m.Id)
+                Url = ApiClient.GetThumbImageApiUrl(m.Provider, m.Id),
             },
             new()
             {
                 ProviderName = Name,
                 Type = ImageType.Backdrop,
-                Url = ApiClient.GetBackdropImageApiUrl(m.Provider, m.Id)
-            }
+                Url = ApiClient.GetBackdropImageApiUrl(m.Provider, m.Id),
+            },
         };
 
         foreach (var imageUrl in m.PreviewImages ?? Enumerable.Empty<string>())
         {
-            images.Add(new RemoteImageInfo
-            {
-                ProviderName = Name,
-                Type = ImageType.Primary,
-                Url = ApiClient.GetPrimaryImageApiUrl(m.Provider, m.Id, imageUrl, pid.Position ?? -1)
-            });
+            images.Add(
+                new RemoteImageInfo
+                {
+                    ProviderName = Name,
+                    Type = ImageType.Primary,
+                    Url = ApiClient.GetPrimaryImageApiUrl(
+                        m.Provider,
+                        m.Id,
+                        imageUrl,
+                        pid.Position ?? -1
+                    ),
+                }
+            );
 
-            images.Add(new RemoteImageInfo
-            {
-                ProviderName = Name,
-                Type = ImageType.Thumb,
-                Url = ApiClient.GetThumbImageApiUrl(m.Provider, m.Id, imageUrl)
-            });
+            images.Add(
+                new RemoteImageInfo
+                {
+                    ProviderName = Name,
+                    Type = ImageType.Thumb,
+                    Url = ApiClient.GetThumbImageApiUrl(m.Provider, m.Id, imageUrl),
+                }
+            );
 
-            images.Add(new RemoteImageInfo
-            {
-                ProviderName = Name,
-                Type = ImageType.Backdrop,
-                Url = ApiClient.GetBackdropImageApiUrl(m.Provider, m.Id, imageUrl)
-            });
+            images.Add(
+                new RemoteImageInfo
+                {
+                    ProviderName = Name,
+                    Type = ImageType.Backdrop,
+                    Url = ApiClient.GetBackdropImageApiUrl(m.Provider, m.Id, imageUrl),
+                }
+            );
         }
 
         return images;
@@ -92,11 +110,6 @@ public class MovieImageProvider : BaseProvider, IRemoteImageProvider, IHasOrder
 
     public IEnumerable<ImageType> GetSupportedImages(BaseItem item)
     {
-        return new List<ImageType>
-        {
-            ImageType.Primary,
-            ImageType.Thumb,
-            ImageType.Backdrop
-        };
+        return new List<ImageType> { ImageType.Primary, ImageType.Thumb, ImageType.Backdrop };
     }
 }
