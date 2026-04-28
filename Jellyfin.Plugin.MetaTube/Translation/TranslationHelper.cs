@@ -4,6 +4,11 @@ using Jellyfin.Plugin.MetaTube.Metadata;
 
 namespace Jellyfin.Plugin.MetaTube.Translation;
 
+/// <summary>
+/// 翻译辅助工具类
+/// 提供元数据翻译的辅助方法
+/// 支持多种翻译引擎和限流控制
+/// </summary>
 public static class TranslationHelper
 {
     private const string AutoLanguageCode = "auto";
@@ -21,7 +26,7 @@ public static class TranslationHelper
         switch (Configuration.TranslationEngine)
         {
             case TranslationEngine.Baidu:
-                millisecondsDelay = 1000; // Limit Baidu API request rate to 1 rps.
+                millisecondsDelay = 1000;
                 nv.Add(new NameValueCollection
                 {
                     { "baidu-app-id", Configuration.BaiduAppId },
@@ -29,7 +34,7 @@ public static class TranslationHelper
                 });
                 break;
             case TranslationEngine.Google:
-                millisecondsDelay = 100; // Limit Google API request rate to 10 rps.
+                millisecondsDelay = 100;
                 nv.Add(new NameValueCollection
                 {
                     { "google-api-key", Configuration.GoogleApiKey },

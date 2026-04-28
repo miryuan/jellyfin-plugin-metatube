@@ -22,6 +22,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.MetaTube.Providers;
 
+/// <summary>
+/// 电影元数据提供器
+/// 为电影提供完整的元数据搜索和获取功能
+/// 包括演员名称转换、标题替换、翻译等功能
+/// 实现 IRemoteMetadataProvider 接口
+/// </summary>
 #if __EMBY__
 public class MovieProvider
     : BaseProvider,
@@ -69,7 +75,6 @@ public class MovieProvider : BaseProvider, IRemoteMetadataProvider<Movie, MovieI
         var pid = info.GetPid(Plugin.ProviderId);
         if (string.IsNullOrWhiteSpace(pid.Id) || string.IsNullOrWhiteSpace(pid.Provider))
         {
-            // Search movies and pick the first result.
             var firstResult = (await GetSearchResults(info, cancellationToken)).FirstOrDefault();
             if (firstResult != null)
                 pid = firstResult.GetPid(Plugin.ProviderId);
@@ -79,30 +84,23 @@ public class MovieProvider : BaseProvider, IRemoteMetadataProvider<Movie, MovieI
 
         var m = await ApiClient.GetMovieInfoAsync(pid.Provider, pid.Id, cancellationToken);
 
-        // Preserve original title.
         var originalTitle = m.Title;
 
-        // Convert to real actor names.
         if (Configuration.EnableRealActorNames)
             await ConvertToRealActorNames(m, cancellationToken);
 
-        // Substitute title.
         if (Configuration.EnableTitleSubstitution)
             m.Title = Configuration.GetTitleSubstitutionTable().Substitute(m.Title);
 
-        // Substitute actors.
         if (Configuration.EnableActorSubstitution)
             m.Actors = Configuration.GetActorSubstitutionTable().Substitute(m.Actors).ToArray();
 
-        // Substitute genres.
         if (Configuration.EnableGenreSubstitution)
             m.Genres = Configuration.GetGenreSubstitutionTable().Substitute(m.Genres).ToArray();
 
-        // Translate movie info.
         if (Configuration.TranslationMode != TranslationMode.Disabled)
             await TranslateMovieInfo(m, info.MetadataLanguage, cancellationToken);
 
-        // Distinct and clean blank list
         m.Genres =
             m.Genres?.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToArray()
             ?? Array.Empty<string>();
@@ -113,7 +111,6 @@ public class MovieProvider : BaseProvider, IRemoteMetadataProvider<Movie, MovieI
             m.PreviewImages?.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToArray()
             ?? Array.Empty<string>();
 
-        // Build parameters.
         var parameters = new Dictionary<string, string>
         {
             { @"{provider}", m.Provider },
@@ -157,44 +154,35 @@ public class MovieProvider : BaseProvider, IRemoteMetadataProvider<Movie, MovieI
             HasMetadata = true,
         };
 
-        // Set provider id.
         result.Item.SetPid(Name, m.Provider, m.Id, pid.Position);
 
-        // Set trailer url.
         var trailerUrl = !string.IsNullOrWhiteSpace(m.PreviewVideoUrl)
             ? m.PreviewVideoUrl
             : m.PreviewVideoHlsUrl;
         if (!string.IsNullOrWhiteSpace(trailerUrl))
             result.Item.SetTrailerUrl(trailerUrl);
 
-        // Set community rating.
         if (Configuration.EnableRatings)
             result.Item.CommunityRating = m.Score > 0 ? (float)Math.Round(m.Score * 2, 1) : null;
 
-        // Add collection.
         if (Configuration.EnableCollections && !string.IsNullOrWhiteSpace(m.Series))
         {
             result.Item.AddCollection(m.Series);
             Logger.Info("Add Collection for movie {0} [{1}]", pid.ToString(), m.Series);
         }
 
-        // Add studio.
         if (!string.IsNullOrWhiteSpace(m.Maker))
             result.Item.AddStudio(m.Maker);
 
-        // Add tag (series).
         if (!string.IsNullOrWhiteSpace(m.Series))
             result.Item.AddTag(m.Series);
 
-        // Add tag (maker).
         if (!string.IsNullOrWhiteSpace(m.Maker))
             result.Item.AddTag(m.Maker);
 
-        // Add tag (label).
         if (!string.IsNullOrWhiteSpace(m.Label))
             result.Item.AddTag(m.Label);
 
-        // Add director.
         if (Configuration.EnableDirectors && !string.IsNullOrWhiteSpace(m.Director))
             result.AddPerson(
                 new PersonInfo
@@ -208,7 +196,6 @@ public class MovieProvider : BaseProvider, IRemoteMetadataProvider<Movie, MovieI
                 }
             );
 
-        // Add actors.
         foreach (var name in m.Actors ?? Enumerable.Empty<string>())
         {
             var actor = new PersonInfo
@@ -237,7 +224,6 @@ public class MovieProvider : BaseProvider, IRemoteMetadataProvider<Movie, MovieI
         var searchResults = new List<MovieSearchResult>();
         if (string.IsNullOrWhiteSpace(pid.Id) || string.IsNullOrWhiteSpace(pid.Provider))
         {
-            // Search movie by name.
             Logger.Info("Search for movie: {0}", info.Name);
             searchResults.AddRange(
                 await ApiClient.SearchMovieAsync(info.Name, pid.Provider, cancellationToken)
@@ -245,7 +231,6 @@ public class MovieProvider : BaseProvider, IRemoteMetadataProvider<Movie, MovieI
         }
         else
         {
-            // Exact search.
             Logger.Info("Search for movie: {0}", pid.ToString());
             searchResults.Add(
                 await ApiClient.GetMovieInfoAsync(
@@ -259,13 +244,11 @@ public class MovieProvider : BaseProvider, IRemoteMetadataProvider<Movie, MovieI
 
         if (Configuration.EnableMovieProviderFilter)
         {
-            if (Configuration.GetMovieProviderFilter() is { } filter && filter.Any()) // Apply only if filter is not empty.
+            if (Configuration.GetMovieProviderFilter() is { } filter && filter.Any())
             {
-                // Filter out mismatched results.
                 searchResults.RemoveAll(m =>
                     !filter.Contains(m.Provider, StringComparer.OrdinalIgnoreCase)
                 );
-                // Reorder results by stable sort.
                 searchResults = searchResults
                     .OrderBy(m =>
                         filter.FindIndex(s =>
@@ -315,7 +298,6 @@ public class MovieProvider : BaseProvider, IRemoteMetadataProvider<Movie, MovieI
                 return;
             }
 
-            // Use the first result as the primary actor selection.
             var firstResult = results.First();
             if (firstResult.Images?.Any() == true)
             {
@@ -329,7 +311,6 @@ public class MovieProvider : BaseProvider, IRemoteMetadataProvider<Movie, MovieI
                 actor.SetPid(Name, firstResult.Provider, firstResult.Id);
             }
 
-            // Use the Gfriends to update the actor profile image, if any.
             foreach (
                 var result in results.Where(result =>
                     result.Provider == Gfriends && result.Images?.Any() == true

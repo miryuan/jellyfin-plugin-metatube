@@ -16,6 +16,11 @@ using Jellyfin.Data.Enums;
 
 namespace Jellyfin.Plugin.MetaTube.ScheduledTasks;
 
+/// <summary>
+/// 元数据整理任务
+/// 自动整理视频元数据，包括添加/移除中文字幕标签
+/// 作为计划任务定期执行
+/// </summary>
 public class OrganizeMetadataTask : IScheduledTask
 {
     private readonly ILibraryManager _libraryManager;
@@ -103,7 +108,6 @@ public class OrganizeMetadataTask : IScheduledTask
                     || HasExternalChineseSubtitle(item.Path)
                 )
                 {
-                    // Add `ChineseSubtitle` genre.
                     case true when !genres.Contains(ChineseSubtitle):
                     {
                         genres.Add(ChineseSubtitle);
@@ -115,7 +119,6 @@ public class OrganizeMetadataTask : IScheduledTask
                             );
                         break;
                     }
-                    // Remove `ChineseSubtitle` genre.
                     case false when genres.Contains(ChineseSubtitle):
                     {
                         genres.RemoveAll(s => s.Equals(ChineseSubtitle));
@@ -130,15 +133,12 @@ public class OrganizeMetadataTask : IScheduledTask
                 _logger.Error("Update ChineseSubtitle for video {0}: {1}", item.Name, e.Message);
             }
 
-            // Remove duplicates.
             var orderedGenres = (
                 Plugin.Instance.Configuration.EnableGenreSubstitution
-                    // Substitute genres.
                     ? Plugin.Instance.Configuration.GetGenreSubstitutionTable().Substitute(genres)
                     : genres
             ).Distinct().OrderByString(genre => genre).ToList();
 
-            // Skip updating item if equal.
             if (
                 !orderedGenres.Any()
                 || (
@@ -217,7 +217,6 @@ public class OrganizeMetadataTask : IScheduledTask
             return;
 
         var m = await ApiClient.GetMovieInfoAsync(pid.Provider, pid.Id, cancellationToken);
-        // Set first primary image.
         item.SetImage(
             new ItemImageInfo
             {

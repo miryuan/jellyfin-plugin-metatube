@@ -12,6 +12,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.MetaTube.Providers;
 
+/// <summary>
+/// 演员元数据提供器
+/// 为演员提供元数据搜索和获取功能
+/// 实现 IRemoteMetadataProvider 接口
+/// </summary>
 public class ActorProvider
     : BaseProvider,
         IRemoteMetadataProvider<Person, PersonLookupInfo>,
@@ -55,10 +60,8 @@ public class ActorProvider
             HasMetadata = true,
         };
 
-        // Set ProviderIdModel.
         result.Item.SetPid(Name, m.Provider, m.Id);
 
-        // Set actor nationality.
         if (!string.IsNullOrWhiteSpace(m.Nationality))
             result.Item.ProductionLocations = new[] { m.Nationality };
 
@@ -75,7 +78,6 @@ public class ActorProvider
         var searchResults = new List<ActorSearchResult>();
         if (string.IsNullOrWhiteSpace(pid.Id))
         {
-            // Search actor by name.
             Logger.Info("Search for actor: {0}", info.Name);
             searchResults.AddRange(
                 await ApiClient.SearchActorAsync(info.Name, pid.Provider, cancellationToken)
@@ -83,7 +85,6 @@ public class ActorProvider
         }
         else
         {
-            // Exact search.
             Logger.Info("Search for actor: {0}", pid.ToString());
             searchResults.Add(
                 await ApiClient.GetActorInfoAsync(

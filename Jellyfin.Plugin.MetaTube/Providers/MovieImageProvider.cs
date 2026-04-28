@@ -14,6 +14,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.MetaTube.Providers;
 
+/// <summary>
+/// 电影图片提供器
+/// 为电影提供远程图片资源（封面、缩略图、背景图等）
+/// 实现 IRemoteImageProvider 接口
+/// </summary>
 public class MovieImageProvider : BaseProvider, IRemoteImageProvider, IHasOrder
 {
 #if __EMBY__

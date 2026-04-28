@@ -13,6 +13,11 @@ using HttpRequestOptions = MediaBrowser.Common.Net.HttpRequestOptions;
 
 namespace Jellyfin.Plugin.MetaTube.ScheduledTasks;
 
+/// <summary>
+/// 插件更新任务
+/// 自动检查并更新 MetaTube 插件到最新版本
+/// 仅 Emby 平台使用
+/// </summary>
 public class UpdatePluginTask : IScheduledTask
 {
     private readonly IApplicationHost _applicationHost;

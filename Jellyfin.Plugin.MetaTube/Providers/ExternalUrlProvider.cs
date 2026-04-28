@@ -7,6 +7,11 @@ using MediaBrowser.Model.Entities;
 
 namespace Jellyfin.Plugin.MetaTube.Providers;
 
+/// <summary>
+/// 外部 URL 提供器
+/// 为电影和演员提供外部链接
+/// 仅 Jellyfin 平台使用
+/// </summary>
 public class ExternalUrlProvider : IExternalUrlProvider
 {
     public string Name => Plugin.ProviderName;

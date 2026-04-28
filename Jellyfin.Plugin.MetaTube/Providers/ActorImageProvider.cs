@@ -13,6 +13,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.MetaTube.Providers;
 
+/// <summary>
+/// 演员图片提供器
+/// 为演员提供远程图片资源
+/// 实现 IRemoteImageProvider 接口
+/// </summary>
 public class ActorImageProvider : BaseProvider, IRemoteImageProvider, IHasOrder
 {
 #if __EMBY__

@@ -11,6 +11,11 @@ using Jellyfin.Plugin.MetaTube.Extensions;
 
 namespace Jellyfin.Plugin.MetaTube.Providers;
 
+/// <summary>
+/// 提供器基类
+/// 为所有元数据提供器提供公共功能
+/// 包含日志记录、配置访问和图片响应处理
+/// </summary>
 #if __EMBY__
 public abstract class BaseProvider : IHasSupportedExternalIdentifiers
 #else

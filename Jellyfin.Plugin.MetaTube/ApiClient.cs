@@ -9,6 +9,11 @@ using MediaBrowser.Common.Net;
 
 namespace Jellyfin.Plugin.MetaTube;
 
+/// <summary>
+/// MetaTube API 客户端
+/// 提供与 MetaTube 服务器通信的所有 API 方法
+/// 包括电影、演员信息的搜索和获取，以及图片和翻译服务
+/// </summary>
 public static class ApiClient
 {
     private const string ActorInfoApi = "/v1/actors";
@@ -21,18 +26,17 @@ public static class ApiClient
     private const string TranslateApi = "/v1/translate";
 
     /// <summary>
-    /// 构建API请求的完整URL。
+    /// 构建 API 请求的完整 URL
     /// </summary>
-    /// <param name="path">API路径，如"/v1/movies"。</param>
-    /// <param name="nv">包含查询参数的键值对集合。</param>
-    /// <returns>完整的API请求URL，包括服务器地址、路径和查询参数。</returns>
+    /// <param name="path">API 路径，如 "/v1/movies"</param>
+    /// <param name="nv">包含查询参数的键值对集合</param>
+    /// <returns>完整的 API 请求 URL，包括服务器地址、路径和查询参数</returns>
     private static string ComposeUrl(string path, NameValueCollection nv)
     {
         var query = HttpUtility.ParseQueryString(string.Empty);
         foreach (string key in nv)
             query.Add(key, nv.Get(key));
 
-        // Build URL
         var uriBuilder = new UriBuilder(Plugin.Instance.Configuration.Server)
         {
             Path = path,
@@ -42,31 +46,21 @@ public static class ApiClient
     }
 
     /// <summary>
-    /// 构建MetaTube图片API的完整URL，用于获取或处理媒体图片。
+    /// 构建 MetaTube 图片 API 的完整 URL，用于获取或处理媒体图片
     /// </summary>
     /// <remarks>
-    /// 该方法是图片相关API的核心URL构造方法，用于生成获取主要图片、缩略图和背景图片的请求URL。
+    /// 该方法是图片相关 API 的核心 URL 构造方法，用于生成获取主要图片、缩略图和背景图片的请求 URL。
     /// 它会自动添加插件配置中的默认图片质量参数，并支持多种图片处理选项。
     /// </remarks>
-    /// <param name="path">图片API的基础路径，如"/v1/images/primary"、"/v1/images/thumb"或"/v1/images/backdrop"。</param>
-    /// <param name="provider">内容提供商名称，如"javlibrary"、"xcity"等。</param>
-    /// <param name="id">内容的唯一标识符，通常是视频或演员的ID。</param>
-    /// <param name="url">可选的原始图片URL，用于从外部源获取图片。</param>
-    /// <param name="ratio">图片宽高比，-1表示使用默认比例。</param>
-    /// <param name="position">图片裁剪位置，范围0-1，-1表示使用默认位置。</param>
-    /// <param name="auto">是否自动处理图片（如自动裁剪、优化）。</param>
-    /// <param name="badge">可选的徽章图片URL，用于在主图片上叠加徽章。</param>
-    /// <returns>完整的图片API请求URL字符串。</returns>
-    /// <example>
-    /// 用法示例：
-    /// <code>
-    /// // 获取演员的主要图片URL
-    /// var url = ComposeImageApiUrl("/v1/images/primary", "javlibrary", "abc123");
-    ///
-    /// // 获取带有裁剪参数的视频缩略图URL
-    /// var url = ComposeImageApiUrl("/v1/images/thumb", "xcity", "xyz789", ratio: 1.78, position: 0.3);
-    /// </code>
-    /// </example>
+    /// <param name="path">图片 API 的基础路径，如 "/v1/images/primary"、"/v1/images/thumb" 或 "/v1/images/backdrop"</param>
+    /// <param name="provider">内容提供商名称，如 "javlibrary"、"xcity" 等</param>
+    /// <param name="id">内容的唯一标识符，通常是视频或演员的 ID</param>
+    /// <param name="url">可选的原始图片 URL，用于从外部源获取图片</param>
+    /// <param name="ratio">图片宽高比，-1 表示使用默认比例</param>
+    /// <param name="position">图片裁剪位置，范围 0-1，-1 表示使用默认位置</param>
+    /// <param name="auto">是否自动处理图片（如自动裁剪、优化）</param>
+    /// <param name="badge">可选的徽章图片 URL，用于在主图片上叠加徽章</param>
+    /// <returns>完整的图片 API 请求 URL 字符串</returns>
     private static string ComposeImageApiUrl(
         string path,
         string provider,
@@ -92,6 +86,14 @@ public static class ApiClient
         );
     }
 
+    /// <summary>
+    /// 构建信息 API 的完整 URL
+    /// </summary>
+    /// <param name="path">API 路径</param>
+    /// <param name="provider">提供商名称</param>
+    /// <param name="id">内容 ID</param>
+    /// <param name="lazy">是否延迟加载</param>
+    /// <returns>完整的 API URL</returns>
     private static string ComposeInfoApiUrl(string path, string provider, string id, bool lazy)
     {
         return ComposeUrl(
@@ -100,6 +102,14 @@ public static class ApiClient
         );
     }
 
+    /// <summary>
+    /// 构建搜索 API 的完整 URL
+    /// </summary>
+    /// <param name="path">API 路径</param>
+    /// <param name="q">搜索关键词</param>
+    /// <param name="provider">提供商名称（可选）</param>
+    /// <param name="fallback">是否启用回退机制</param>
+    /// <returns>完整的 API URL</returns>
     private static string ComposeSearchApiUrl(string path, string q, string provider, bool fallback)
     {
         return ComposeUrl(
@@ -113,6 +123,16 @@ public static class ApiClient
         );
     }
 
+    /// <summary>
+    /// 构建翻译 API 的完整 URL
+    /// </summary>
+    /// <param name="path">API 路径</param>
+    /// <param name="q">要翻译的文本</param>
+    /// <param name="from">源语言代码</param>
+    /// <param name="to">目标语言代码</param>
+    /// <param name="engine">翻译引擎名称</param>
+    /// <param name="nv">额外的参数集合</param>
+    /// <returns>完整的 API URL</returns>
     private static string ComposeTranslateApiUrl(
         string path,
         string q,
@@ -135,6 +155,14 @@ public static class ApiClient
         );
     }
 
+    /// <summary>
+    /// 获取主图片 API URL
+    /// </summary>
+    /// <param name="provider">提供商名称</param>
+    /// <param name="id">内容 ID</param>
+    /// <param name="position">裁剪位置</param>
+    /// <param name="badge">徽章 URL</param>
+    /// <returns>主图片 API URL</returns>
     public static string GetPrimaryImageApiUrl(
         string provider,
         string id,
@@ -152,6 +180,16 @@ public static class ApiClient
         );
     }
 
+    /// <summary>
+    /// 获取主图片 API URL（带原始图片 URL）
+    /// </summary>
+    /// <param name="provider">提供商名称</param>
+    /// <param name="id">内容 ID</param>
+    /// <param name="url">原始图片 URL</param>
+    /// <param name="position">裁剪位置</param>
+    /// <param name="auto">是否自动处理</param>
+    /// <param name="badge">徽章 URL</param>
+    /// <returns>主图片 API URL</returns>
     public static string GetPrimaryImageApiUrl(
         string provider,
         string id,
@@ -173,11 +211,26 @@ public static class ApiClient
         );
     }
 
+    /// <summary>
+    /// 获取缩略图 API URL
+    /// </summary>
+    /// <param name="provider">提供商名称</param>
+    /// <param name="id">内容 ID</param>
+    /// <returns>缩略图 API URL</returns>
     public static string GetThumbImageApiUrl(string provider, string id)
     {
         return ComposeImageApiUrl(ThumbImageApi, provider, id);
     }
 
+    /// <summary>
+    /// 获取缩略图 API URL（带原始图片 URL）
+    /// </summary>
+    /// <param name="provider">提供商名称</param>
+    /// <param name="id">内容 ID</param>
+    /// <param name="url">原始图片 URL</param>
+    /// <param name="position">裁剪位置</param>
+    /// <param name="auto">是否自动处理</param>
+    /// <returns>缩略图 API URL</returns>
     public static string GetThumbImageApiUrl(
         string provider,
         string id,
@@ -189,11 +242,26 @@ public static class ApiClient
         return ComposeImageApiUrl(ThumbImageApi, provider, id, url, position: position, auto: auto);
     }
 
+    /// <summary>
+    /// 获取背景图 API URL
+    /// </summary>
+    /// <param name="provider">提供商名称</param>
+    /// <param name="id">内容 ID</param>
+    /// <returns>背景图 API URL</returns>
     public static string GetBackdropImageApiUrl(string provider, string id)
     {
         return ComposeImageApiUrl(BackdropImageApi, provider, id);
     }
 
+    /// <summary>
+    /// 获取背景图 API URL（带原始图片 URL）
+    /// </summary>
+    /// <param name="provider">提供商名称</param>
+    /// <param name="id">内容 ID</param>
+    /// <param name="url">原始图片 URL</param>
+    /// <param name="position">裁剪位置</param>
+    /// <param name="auto">是否自动处理</param>
+    /// <returns>背景图 API URL</returns>
     public static string GetBackdropImageApiUrl(
         string provider,
         string id,
@@ -213,11 +281,23 @@ public static class ApiClient
     }
 
 #if __EMBY__
+    /// <summary>
+    /// 获取图片响应（Emby 平台）
+    /// </summary>
+    /// <param name="url">图片 URL</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>HTTP 响应信息</returns>
     public static async Task<HttpResponseInfo> GetImageResponse(
         string url,
         CancellationToken cancellationToken
     )
 #else
+    /// <summary>
+    /// 获取图片响应（Jellyfin 平台）
+    /// </summary>
+    /// <param name="url">图片 URL</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>HTTP 响应消息</returns>
     public static async Task<HttpResponseMessage> GetImageResponse(
         string url,
         CancellationToken cancellationToken
@@ -246,6 +326,13 @@ public static class ApiClient
 #endif
     }
 
+    /// <summary>
+    /// 获取演员详细信息
+    /// </summary>
+    /// <param name="provider">提供商名称</param>
+    /// <param name="id">演员 ID</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>演员详细信息对象</returns>
     public static async Task<ActorInfo> GetActorInfoAsync(
         string provider,
         string id,
@@ -255,12 +342,19 @@ public static class ApiClient
         return await GetActorInfoAsync(
             provider,
             id,
-            true /* default */
-            ,
+            true,
             cancellationToken
         );
     }
 
+    /// <summary>
+    /// 获取演员详细信息（带延迟加载选项）
+    /// </summary>
+    /// <param name="provider">提供商名称</param>
+    /// <param name="id">演员 ID</param>
+    /// <param name="lazy">是否延迟加载</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>演员详细信息对象</returns>
     public static async Task<ActorInfo> GetActorInfoAsync(
         string provider,
         string id,
@@ -272,6 +366,13 @@ public static class ApiClient
         return await GetDataAsync<ActorInfo>(apiUrl, true, cancellationToken);
     }
 
+    /// <summary>
+    /// 获取电影详细信息
+    /// </summary>
+    /// <param name="provider">提供商名称</param>
+    /// <param name="id">电影 ID</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>电影详细信息对象</returns>
     public static async Task<MovieInfo> GetMovieInfoAsync(
         string provider,
         string id,
@@ -281,12 +382,19 @@ public static class ApiClient
         return await GetMovieInfoAsync(
             provider,
             id,
-            true /* default */
-            ,
+            true,
             cancellationToken
         );
     }
 
+    /// <summary>
+    /// 获取电影详细信息（带延迟加载选项）
+    /// </summary>
+    /// <param name="provider">提供商名称</param>
+    /// <param name="id">电影 ID</param>
+    /// <param name="lazy">是否延迟加载</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>电影详细信息对象</returns>
     public static async Task<MovieInfo> GetMovieInfoAsync(
         string provider,
         string id,
@@ -298,6 +406,12 @@ public static class ApiClient
         return await GetDataAsync<MovieInfo>(apiUrl, true, cancellationToken);
     }
 
+    /// <summary>
+    /// 搜索演员
+    /// </summary>
+    /// <param name="q">搜索关键词</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>演员搜索结果列表</returns>
     public static async Task<List<ActorSearchResult>> SearchActorAsync(
         string q,
         CancellationToken cancellationToken
@@ -306,6 +420,13 @@ public static class ApiClient
         return await SearchActorAsync(q, string.Empty, cancellationToken);
     }
 
+    /// <summary>
+    /// 搜索演员（指定提供商）
+    /// </summary>
+    /// <param name="q">搜索关键词</param>
+    /// <param name="provider">提供商名称</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>演员搜索结果列表</returns>
     public static async Task<List<ActorSearchResult>> SearchActorAsync(
         string q,
         string provider,
@@ -315,12 +436,19 @@ public static class ApiClient
         return await SearchActorAsync(
             q,
             provider,
-            true /* default */
-            ,
+            true,
             cancellationToken
         );
     }
 
+    /// <summary>
+    /// 搜索演员（完整参数）
+    /// </summary>
+    /// <param name="q">搜索关键词</param>
+    /// <param name="provider">提供商名称</param>
+    /// <param name="fallback">是否启用回退机制</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>演员搜索结果列表</returns>
     public static async Task<List<ActorSearchResult>> SearchActorAsync(
         string q,
         string provider,
@@ -332,6 +460,12 @@ public static class ApiClient
         return await GetDataAsync<List<ActorSearchResult>>(apiUrl, true, cancellationToken);
     }
 
+    /// <summary>
+    /// 搜索电影
+    /// </summary>
+    /// <param name="q">搜索关键词</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>电影搜索结果列表</returns>
     public static async Task<List<MovieSearchResult>> SearchMovieAsync(
         string q,
         CancellationToken cancellationToken
@@ -340,6 +474,13 @@ public static class ApiClient
         return await SearchMovieAsync(q, string.Empty, cancellationToken);
     }
 
+    /// <summary>
+    /// 搜索电影（指定提供商）
+    /// </summary>
+    /// <param name="q">搜索关键词</param>
+    /// <param name="provider">提供商名称</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>电影搜索结果列表</returns>
     public static async Task<List<MovieSearchResult>> SearchMovieAsync(
         string q,
         string provider,
@@ -349,12 +490,19 @@ public static class ApiClient
         return await SearchMovieAsync(
             q,
             provider,
-            true /* default */
-            ,
+            true,
             cancellationToken
         );
     }
 
+    /// <summary>
+    /// 搜索电影（完整参数）
+    /// </summary>
+    /// <param name="q">搜索关键词</param>
+    /// <param name="provider">提供商名称</param>
+    /// <param name="fallback">是否启用回退机制</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>电影搜索结果列表</returns>
     public static async Task<List<MovieSearchResult>> SearchMovieAsync(
         string q,
         string provider,
@@ -366,6 +514,16 @@ public static class ApiClient
         return await GetDataAsync<List<MovieSearchResult>>(apiUrl, true, cancellationToken);
     }
 
+    /// <summary>
+    /// 翻译文本
+    /// </summary>
+    /// <param name="q">要翻译的文本</param>
+    /// <param name="from">源语言代码</param>
+    /// <param name="to">目标语言代码</param>
+    /// <param name="engine">翻译引擎名称</param>
+    /// <param name="nv">额外的翻译参数</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>翻译结果信息</returns>
     public static async Task<TranslationInfo> TranslateAsync(
         string q,
         string from,
@@ -380,14 +538,14 @@ public static class ApiClient
     }
 
     /// <summary>
-    /// 
+    /// 从 API 获取数据的通用方法
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="url"></param>
-    /// <param name="requireAuth"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
+    /// <typeparam name="T">返回数据类型</typeparam>
+    /// <param name="url">API URL</param>
+    /// <param name="requireAuth">是否需要身份验证</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>反序列化后的数据对象</returns>
+    /// <exception cref="Exception">API 请求错误或数据为空时抛出异常</exception>
     private static async Task<T> GetDataAsync<T>(
         string url,
         bool requireAuth,
@@ -398,11 +556,9 @@ public static class ApiClient
 
         var request = new HttpRequestMessage(HttpMethod.Get, url);
 
-        // Add General Headers.
         request.Headers.Add("Accept", "application/json");
         request.Headers.Add("User-Agent", DefaultUserAgent);
 
-        // Set API Authorization Token.
         if (requireAuth && !string.IsNullOrWhiteSpace(Plugin.Instance.Configuration.Token))
             request.Headers.Authorization = new AuthenticationHeaderValue(
                 "Bearer",
@@ -411,23 +567,17 @@ public static class ApiClient
 
         var response = await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
-        // Nullable forgiving reason:
-        // Response is unlikely to be null.
-        // If it happens to be null, an exception is planed to be thrown either way.
         var apiResponse = (
             await response
                 .Content!.ReadFromJsonAsync<ResponseInfo<T>>(cancellationToken: cancellationToken)
                 .ConfigureAwait(false)
         )!;
 
-        // EnsureSuccessStatusCode ignoring reason:
-        // When the status is unsuccessful, the API response contains error details.
         if (!response.IsSuccessStatusCode && apiResponse.Error != null)
             throw new Exception(
                 $"API request error: {apiResponse.Error.Code} ({apiResponse.Error.Message})"
             );
 
-        // Note: data field must not be null if there are no errors.
         if (apiResponse.Data == null)
             throw new Exception("Response data field is null");
 
@@ -439,20 +589,19 @@ public static class ApiClient
     private static readonly HttpClient HttpClient;
     private static string DefaultUserAgent => $"{Plugin.ProviderName}/{Plugin.Instance.Version}";
 
+    /// <summary>
+    /// 静态构造函数
+    /// 初始化 HTTP 客户端配置
+    /// </summary>
     static ApiClient()
     {
         HttpClient = new HttpClient(
             new SocketsHttpHandler
             {
-                // Connect Timeout.
                 ConnectTimeout = TimeSpan.FromSeconds(30),
-
-                // TCP Keep Alive.
                 KeepAlivePingPolicy = HttpKeepAlivePingPolicy.Always,
                 KeepAlivePingDelay = TimeSpan.FromSeconds(30),
                 KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
-
-                // Connection Pooling.
                 PooledConnectionLifetime = TimeSpan.FromMinutes(10),
                 PooledConnectionIdleTimeout = TimeSpan.FromSeconds(90),
             }

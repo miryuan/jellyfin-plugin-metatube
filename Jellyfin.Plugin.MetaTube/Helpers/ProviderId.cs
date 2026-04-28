@@ -1,15 +1,40 @@
 namespace Jellyfin.Plugin.MetaTube.Helpers;
 
+/// <summary>
+/// 提供商 ID 类
+/// 用于存储和解析提供商标识信息
+/// 格式：Provider:Id:Position:Update
+/// </summary>
 public class ProviderId
 {
+    /// <summary>
+    /// 提供商名称
+    /// </summary>
     public string Provider { get; set; }
 
+    /// <summary>
+    /// 提供商中的唯一标识 ID
+    /// </summary>
     public string Id { get; set; }
 
+    /// <summary>
+    /// 位置信息（可选）
+    /// 用于排序或定位
+    /// </summary>
     public double? Position { get; set; }
 
+    /// <summary>
+    /// 更新标志（可选）
+    /// 指示是否需要更新
+    /// </summary>
     public bool? Update { get; set; }
 
+    /// <summary>
+    /// 解析原始提供商 ID 字符串
+    /// 字符串格式：Provider:Id:Position:Update
+    /// </summary>
+    /// <param name="rawPid">原始提供商 ID 字符串</param>
+    /// <returns>解析后的 ProviderId 对象</returns>
     public static ProviderId Parse(string rawPid)
     {
         var values = rawPid?.Split(':');
@@ -22,6 +47,10 @@ public class ProviderId
         };
     }
 
+    /// <summary>
+    /// 将提供商 ID 转换为字符串格式
+    /// </summary>
+    /// <returns>格式化的提供商 ID 字符串</returns>
     public override string ToString()
     {
         var pid = this;
@@ -33,6 +62,12 @@ public class ProviderId
         return string.Join(':', values);
     }
 
+    /// <summary>
+    /// 将字符串转换为布尔值
+    /// 支持多种格式：1/0, t/f, true/false（不区分大小写）
+    /// </summary>
+    /// <param name="s">要转换的字符串</param>
+    /// <returns>转换后的布尔值，如果无法转换则返回 null</returns>
     private static bool? ToBool(string s)
     {
         switch (s)
@@ -56,6 +91,11 @@ public class ProviderId
         return null;
     }
 
+    /// <summary>
+    /// 将字符串转换为双精度浮点数
+    /// </summary>
+    /// <param name="s">要转换的字符串</param>
+    /// <returns>转换后的数值，如果无法转换则返回 null</returns>
     private static double? ToDouble(string s)
     {
         return double.TryParse(s, out var result) ? result : null;
